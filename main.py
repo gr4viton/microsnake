@@ -5,9 +5,13 @@ import staccel
 import math
 
 import os
-import gc # garbage collection for writing?
+#import gc # garbage collection for writing?
 
+from microsnake import MicroSnakeGame as Game
 import lcd_i2c
+
+import micropython
+micropython.alloc_emergency_exception_buf(100)
 
 try: 
     print('try importing pins')
@@ -17,9 +21,15 @@ except ImportError:
 
 #from machine import Pins
 
+
+
+x = [0,1,2,3]
+
+
 class Machine():
     n = 0
     leds = None
+    move_arrow_pressed = None
 
     def on_press(self):
         print('pressed!')
@@ -43,28 +53,30 @@ class Machine():
             #print(ex.strerror)
             print('error')
     
+    
     def __init__(self):
-        Machine.turned = False
-        Machine.turn_time = 0
-        Machine.turn_delay = 200
+#        self.show_gpio()
+        self.init_buttons()
+        self.init_leds()
 
-        Machine.n = 0
-        self.init_button()
-        #self.show_gpio()
 
         self.init_lcd()
 #        self.demo_lcd()
 #        lcd.lcd_init()
+        self.init_game()
+
+        self.main_loop()
 
 
-        #self.main_loop()
-#        self.game_loop()
+    def init_game(self):
+        self.game = Game(self.disp_field)
+
+#        self.game.run()
 
     def main_loop(self):
         a = 0
         while(1):
             a += 1
-            self.demo2_lcd()    
             if a % 100000 == 0:
                 #self.demo_lcd()
                 pass
@@ -72,147 +84,72 @@ class Machine():
                 print(str(a) + 'cycles')
                 a = 0
             pass
+        #pyb.wfi() # https://docs.micropython.org/en/latest/pyboard/library/pyb.html
+        #pyb.standby()
+        pyb.info()
 
-    def game_loop(self):
+    def init_leds(self):
+        self.leds = []
+        for i in range(4):
+            self.leds.append(pyb.LED(i+1))
 
+    def go_way(self, way='r'):
 
-        pos_min = [0, 0]
-        pos_max = [16,8]
-#        vel = [1,0]
+#        game.go_way('r')
+
+#        player.vel = 
+        pass
+    
+
+    def init_buttons(self):
         
-        vels = [[1,0], [0,1], [-1,0], [0,-1]]
-        vel = 0
-
-        start_length = 5
-        snake = [[i,0] for i in range(start_length)]
-
-#        head = [start_length-1, 0] # x,y
-#        tail = [0, 0]
-        head = start_length-1
-        tail = 0
-#        snake_lenth = start_length
-
-#        line = ['_']*pos_max[0]
-#        field = [line] for i in range(pos_max[1])
-#        field = [line[:]]*pos_max[1]
-        null_char = ' '
-#        field = list(pos_max[0], pos_max[1])
-        w, h = pos_max
-        field = [[null_char for x in range(w)] for y in range(h)] 
-#        for x in range(pos_max[0]):
-#            for y in range(pos_max[1]):
-#                field[x][y] = null
-
-        head_char = 'o'
-        tail_char = null_char
-#        tail_char = '_'
-        get_char = 'x'
+        sw = pyb.Switch()
+        sw.callback(self.on_press)
         
-        get = [pos-1 for pos in pos_max]
+        # sw.callback(lambda:print('press!'))
+        pins = ['A' + str(i) for i in range(1, 8, 2)]
+#        pins = ['D' + str(i) for i in range(0, 7, 2)]
+#        pins = ['A7']
+
+        print('Initializing buttons:', pins)
+
+        self.on_btn_press = {}
+        self.btns = []
+
+        bs = []
+        mapper = [1,2,3,4]
+        bs.append(lambda x: print(mapper[0], ': line', x))
+        bs.append(lambda x: print(mapper[1], ': line', x))
+        bs.append(lambda x: print(mapper[2], ': line', x))
+        bs.append(lambda x: print(mapper[3], ': line', x))  
 
 
-        def print_char(pos, char):
-            field[pos[1]][pos[0]] = char
+        def on_arrow_button(btn_index, line):
+            Machine.move_arrow_pressed = btn_index
+            print('btn_index', btn_index, ': line', line)
 
-        def print_head():
-            print_char(snake[head], head_char)
+        for i, pin_id in enumerate(pins):
+
+            new_callback = bs[i]
+#            new_callback = on_arrow_button
+            new_btn = pyb.ExtInt(pin_id, pyb.ExtInt.IRQ_FALLING, 
+                    pyb.Pin.PULL_UP, new_callback)
+
+
+#            new_btn = pyb.Pin(pin_id, pyb.Pin.IN, Pin.PULL_UP)
+            
+
+            self.btns.append(new_btn)
         
-        def print_tail():
-            print_char(snake[tail], tail_char)
-        
-        def print_get():
-            print_char(get, get_char)
-        
-        def turn(dir=1):
-            if dir == 'left':
-                dir = 1
-            elif dir == 'right':
-                dir = -1
-            
-            if dir != 1 and dir != -1:
-                print('Not turning! Use "left", "right" or 1, -1 as params!')
-                return
-            vel = (vel+dir) % (len(vels)-1)
-            Machine.turned = False 
-
-        def move(pos):
-            new_pos = [0,0]
-            for q in range(len(pos)):
-                new_pos[q] = pos[q] + vels[vel][q]
-                if new_pos[q] >= pos_max[q]:
-                    new_pos[q] = pos_min[q]
-                elif new_pos[q] < pos_min[q]:
-                    new_pos[q] = pos_max[q]-1
-            
-            print('new_pos', new_pos)
-            return new_pos
-
-        def check_get(pos):
-            got =  True
-            for q in range(len(pos)):
-                if pos[q] != get[q]:
-                    got = False
-            
-            print('got,new_pos,get',got,pos,get)
-            return got
-
-        for pos in snake:
-            print_char(pos, head_char)
 
 
-        running = True
-        step = 0
-        while(running):
- #           pos = move(pos)
-
-            print('Step>>', step)
-            print('vels[vel] = ', vels[vel])
-            print('head,tail = ',head, tail)
-            print(snake)
-            
-            print('Machine.turned', Machine.turned)
-            if Machine.turned:
-                print('turning')
-                turn()
-
-            print_get()
-
-            if not 1:
-                print_tail() 
-                snake[tail] = snake[head]
-                snake[head] = move(snake[head])
-                print_head()
-                tail = (tail+1) % (len(snake)-2)
-
-            new_pos = move(snake[head])
-            got = check_get(new_pos)
-            if not got:
-                print_tail() 
-                snake[tail] = new_pos
-            else:
-                snake.append(snake[tail])
-                snake[tail] = new_pos
-            print_head()
-            head = tail
-            tail = (tail+1) % len(snake)
-            
-            print('after update')
-            
-            print('head,tail = ',head, tail)
-            print(snake)
-
-            if step > start_length:
-#                print_tail()
-                pass
-
-            for line_num in range(pos_max[1]):
-                line = ''.join(field[line_num])
-                lcd_line_num = line_num % 2
-                lcd_num = (line_num/2) % 4
-                self.lcds[lcd_num].disp(line, lcd_line_num)
-#            lcd.line('no_map',1)
-            step += 1
-            pyb.delay(150)
+    def disp_field(self, field):
+        num_lines = len(field)
+        for line_num in range(num_lines):
+            line = ''.join(field[line_num])
+            lcd_line_num = line_num % 2
+            lcd_num = int(line_num/2) % 4
+            self.lcds[lcd_num].disp(line, lcd_line_num)
 
     def init_i2c(self, bus=2, role=I2C.MASTER, baudrate=115200, self_addr=0x42):
         self.i2c = I2C(bus)
@@ -300,6 +237,8 @@ class Machine():
             f.write(str(self.br))
             print('Functional baudrate {}, saved to file {}.'.format(
                     self.br, self.file_br))
+        pyb.sync()
+
 
     def scan_as(self):        
         base = 0x00
@@ -332,7 +271,8 @@ class Machine():
                 print('Responsive address 0x{0:02X} = {0} dec, saved to file {1}.'.format(self.lcd_a, self.file_as))
 
             #print(os.listdir())
-            gc.collect()
+#            gc.collect()
+            pyb.sync()
         else:
             print('No responsive address found!')
 
@@ -376,12 +316,6 @@ class Machine():
 
         #accel = pyb.Accel()
 
-    def init_button(self):
-        
-        sw = pyb.Switch()
-        # sw.callback(lambda:print('press!'))
-
-        sw.callback(self.on_press)
 
 
 

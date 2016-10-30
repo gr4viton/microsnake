@@ -1,18 +1,13 @@
 #!/usr/bin/python
-#--------------------------------------
-#    ___  ___  _ ____
-#   / _ \/ _ \(_) __/__  __ __
-#  / , _/ ___/ /\ \/ _ \/ // /
-# /_/|_/_/  /_/___/ .__/\_, /
-#                /_/   /___/
 #
 #  lcd_i2c.py
-#  LCD test script using I2C backpack.
+#  lcd1602 class for character display initialization and usage via micropython
 #  Supports 16x2 and 20x4 screens.
 #
-# Author : Matt Hawkins
-# Date   : 20/09/2015
+# Author : gr4vion
+# Date   : 28-10-2016
 #
+# On the base of: Matt Hawkins
 # http://www.raspberrypi-spy.co.uk/
 #
 # Copyright 2015 Matt Hawkins
@@ -31,8 +26,6 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 #--------------------------------------
-#import smbus
-#import time
 import pyb
 from pyb import I2C 
 
@@ -143,7 +136,7 @@ class lcd1602():
     #  message = message.ljust(LCD_WIDTH," ")
 
       self.send_byte(line, self.LCD_CMD)
-      print(message)
+      #print(message)
 
       #if LCD_WIDTH > len(message):
       #  length = len(message)
@@ -159,10 +152,6 @@ class lcd1602():
           byte = ord(message[i])
 
         self.send_byte(byte, self.LCD_CHR)
-
-
-
-
 
 def main():
   # Main program block
