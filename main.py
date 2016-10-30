@@ -7,7 +7,14 @@ import math
 import os
 #import gc # garbage collection for writing?
 
+#import microsnake
 from microsnake import MicroSnakeGame as Game
+#from microsnake import move_arrow_pressed
+import shared_globals
+
+#from shared_globals import move_arrow_pressed as move_arrow_pressed
+
+
 import lcd_i2c
 
 import micropython
@@ -23,13 +30,15 @@ except ImportError:
 
 
 
-x = [0,1,2,3]
-
+#x = [0,1,2,3]
+#move_arrow_pressed = None
+#micropython
+#microsnake.move_arrow_pressed = move_arrow_pressed
 
 class Machine():
     n = 0
     leds = None
-    move_arrow_pressed = None
+#    move_arrow_pressed = None
 
     def on_press(self):
         print('pressed!')
@@ -71,7 +80,7 @@ class Machine():
     def init_game(self):
         self.game = Game(self.disp_field)
 
-#        self.game.run()
+        self.game.run()
 
     def main_loop(self):
         a = 0
@@ -99,7 +108,7 @@ class Machine():
 
 #        player.vel = 
         pass
-    
+   
 
     def init_buttons(self):
         
@@ -117,27 +126,28 @@ class Machine():
         self.btns = []
 
         bs = []
-        mapper = [1,2,3,4]
-        bs.append(lambda x: print(mapper[0], ': line', x))
-        bs.append(lambda x: print(mapper[1], ': line', x))
-        bs.append(lambda x: print(mapper[2], ': line', x))
-        bs.append(lambda x: print(mapper[3], ': line', x))  
+        mapper = range(len(pins))
+#        bs.append(lambda x: print(mapper[0], ': line', x))
+#        bs.append(lambda x: print(mapper[1], ': line', x))
+#        bs.append(lambda x: print(mapper[2], ': line', x))
+#        bs.append(lambda x: print(mapper[3], ': line', x))  
 
+        def on_arrow_button(mapped, line):
+            shared_globals.move_arrow_pressed = mapped
+#            print('on_arrow_button=', mapped)
+            print('mapped var', mapped, ': line', line)
 
-        def on_arrow_button(btn_index, line):
-            Machine.move_arrow_pressed = btn_index
-            print('btn_index', btn_index, ': line', line)
+        bs.append(lambda x: on_arrow_button(mapper[0], x))
+        bs.append(lambda x: on_arrow_button(mapper[1], x))
+        bs.append(lambda x: on_arrow_button(mapper[2], x))
+        bs.append(lambda x: on_arrow_button(mapper[3], x))
+
 
         for i, pin_id in enumerate(pins):
 
             new_callback = bs[i]
-#            new_callback = on_arrow_button
             new_btn = pyb.ExtInt(pin_id, pyb.ExtInt.IRQ_FALLING, 
                     pyb.Pin.PULL_UP, new_callback)
-
-
-#            new_btn = pyb.Pin(pin_id, pyb.Pin.IN, Pin.PULL_UP)
-            
 
             self.btns.append(new_btn)
         
