@@ -60,9 +60,33 @@ class MicroSnakeGame():
         
         q.dot_pos = [pos-1 for pos in q.pos_max]
 
+        for pos in q.snake:
+            q.print_char(pos, q.head_char)
+
+
+        q.step = 0
+        
+
+
+        shared_globals.field = q.field
+        q.update_field_lines()
+#        shared_globals.field_lines = 
+#        shared_globals.bytefield = q.byte_field
+
+        shared_globals.line_range = range(len(q.field))
+#        shared_globals.char_range = range(len(q.field[0]))
 
     def run(q):
         q.game_loop()
+
+    def update_field_lines(q):
+        
+        field_lines = []
+        for line_num in range(len(q.field)):
+            field_lines.append( ''.join(q.field[line_num]) )
+            
+        shared_globals.field_lines = field_lines
+
 
     def turn(q, heading=1):
         if heading == 'left':
@@ -71,7 +95,7 @@ class MicroSnakeGame():
             heading = -1
         
         if heading != 1 and heading != -1:
-            print('Not turning! Use "left", "right" or 1, -1 as params!')
+            q.print('Not turning! Use "left", "right" or 1, -1 as params!')
             return
         q.vel = (q.vel+dir) % (len(q.vels)-1)
         MicroSnakeGame.turned = False 
@@ -107,7 +131,7 @@ class MicroSnakeGame():
             elif new_pos[i] < q.pos_min[i]:
                 new_pos[i] = q.pos_max[i]-1
         
-        print('new_pos', new_pos)
+        q.print('new_pos', new_pos)
         return new_pos
 
     def set_random_dot(q):
@@ -121,15 +145,15 @@ class MicroSnakeGame():
             if pos[i] != q.dot_pos[i]:
                 got = False
         if got:
-            print('got, new_pos, dot', got, pos, q.dot_pos)
+            q.print('got, new_pos, dot', got, pos, q.dot_pos)
             q.set_random_dot()
         return got
 
     def handle_input(q):
         move_arrow_pressed = shared_globals.move_arrow_pressed
-        print('handle_input=', move_arrow_pressed)
+        q.print('handle_input=', move_arrow_pressed)
         if move_arrow_pressed is not None:
-            print('TURNED!, ', move_arrow_pressed)
+            q.print('TURNED!, ', move_arrow_pressed)
 #            q.vel = q.vels[move_arrow_pressed]
             q.vel = move_arrow_pressed
             move_arrow_pressed = None
@@ -142,12 +166,7 @@ class MicroSnakeGame():
 
     def game_loop(q):
 
-        for pos in q.snake:
-            q.print_char(pos, q.head_char)
-
-
         q.running = True
-        q.step = 0
         while(q.running):
  #           pos = move(pos)
 
@@ -199,7 +218,8 @@ class MicroSnakeGame():
                 pass
 
 #            q.field = field
-            q.disp_field(q.field)
+#            q.disp_field(q.field)
+            shared_globals.field = q.field
 
 #            lcd.line('no_map',1)
             q.step += 1
