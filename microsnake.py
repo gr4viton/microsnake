@@ -71,12 +71,15 @@ class MicroSnakeGame():
         shared_globals.field = q.field
         shared_globals.line_max = q.pos_max[1]
         q.update_field_dict()
-
+        
+        q.last_sent_field = q.field
 #        shared_globals.field_lines = 
 #        shared_globals.bytefield = q.byte_field
 
         shared_globals.line_range = range(len(q.field))
 #        shared_globals.char_range = range(len(q.field[0]))
+        
+        pyb.delay(200)
 
     def run(q):
         q.game_loop()
@@ -92,10 +95,23 @@ class MicroSnakeGame():
             lcd_num = math.floor(line_num/2) % 4
 
             
-            field_dict.update{line_num : [line, lcd_line_num]}
+            field_dict.update({line_num : [line, lcd_num, lcd_line_num]})
 #            q.lcds[lcd_num].disp(line, lcd_line_num)
 
+
         shared_globals.field_dict = field_dict
+
+    def send_udpate_chars(q):
+        update_chars = []
+        for line_num in range(len(q.field)):
+            for i in range line_num:
+                new_char = q.field[line_num][i]
+                if new_char != q.last_sent_field[line_num][i]:
+                    char = [line_num, i, new_char]
+                    update_chars.append(char)
+
+        q.update_chars += update_chars
+        q.last_sent_field = q.field
 
 
     def update_field_lines(q):
@@ -240,7 +256,6 @@ class MicroSnakeGame():
 #            q.disp_field(q.field)
 #            q.preprint_field(q.field)
             q.update_field_dict()
-            shared_globals.field = q.field
 
 #            lcd.line('no_map',1)
             q.step += 1

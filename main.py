@@ -88,7 +88,7 @@ class Machine():
 
 
         tim4.callback(lambda x: q.disp_field())
-        tim4.init(freq=10)
+        tim4.init(freq=5)
         q.game_disp_timer = tim4
 
         q.game.run()
@@ -166,40 +166,14 @@ class Machine():
 
     def disp_field(q, line_num=0, lcd_line_num=0, lcd_num=0, twice=0, line_num2=0):
 #        field = shared_globals.field
-#        char_range = shared_globals.char_range
-        line_range = shared_globals.line_range 
-#        bytefield = shared_globals.bytefield
-#        num_lines = len(field)
-#        line_range = range(num_lines)
-        line_num = 0
-        line_num2 = 0
-#        for line_num in line_range:
-        while line_num < 8:
-
-            #bytefield
-#            line = ''.join(field[line_num])
-            print(1)
-            line = shared_globals.field_lines[line_num]
-            print(2)
-            lcd_line_num = line_num % 2
-            print(3)
-            
-#            line_num = line_num/2
-            #lcd_num = math.floor(line_num/2) % 4
-            lcd_num = math.floor(line_num2)
-
-            print(4)
-
+        line_max = shared_globals.line_max
+        field_dict = shared_globals.field_dict
+        while line_num < line_max:
+#            line, lcd_line_num = field_dict[line_num]
+            line, lcd_num, lcd_line_num = field_dict[line_num]
             q.lcds[lcd_num].disp(line, lcd_line_num)
-
-#            q.lcds[int(line_num/2) % 4].disp( 
-#                    shared_globals.field_lines[line_num], 
-#                    line_num % 2)
-            if twice == 1:
-                line_num2 += 1
-                twice = 0
-            twice += 1
-            line_num += 1
+#            print('lcd_num, lcd_line_num, line=', lcd_num, lcd_line_num, line)
+            line_num +=1
 
     def init_i2c(q, bus=2, role=I2C.MASTER, baudrate=115200, self_addr=0x42):
         q.i2c = I2C(bus)
