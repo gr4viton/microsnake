@@ -59,7 +59,8 @@ class MicroSnakeGame():
         q.field = [[q.null_char for x in range(w)] for y in range(h)] 
         
         q.dot_pos = [pos-1 for pos in q.pos_max]
-
+        
+        q.update_chars = []
         for pos in q.snake:
             q.print_char(pos, q.head_char)
 
@@ -107,8 +108,7 @@ class MicroSnakeGame():
         lcd_num = math.floor(line_num/2) % 4
         return lcd_num, lcd_line_num
 
-    def send_udpate_chars(q):
-        update_chars = []
+    def send_udpate_chars(q, update_chars=[]):
         print(q.field)
         print(q.last_sent_field)
         for line_num in range(len(q.field)):
@@ -158,8 +158,13 @@ class MicroSnakeGame():
 #        player.vel = 
 
 
-    def print_char(q, pos, char):
-        q.field[pos[1]][pos[0]] = char
+    def print_char(q, pos, new_char):
+        q.field[pos[1]][pos[0]] = new_char
+        
+        lcd_num, lcd_line_num = q.get_lcd_coords(*pos)
+        char = [lcd_num, lcd_line_num, pos[1], new_char]
+        q.update_chars.append(char)
+
 
     def print_head(q):
         q.print_char(q.snake[q.head], q.head_char)
@@ -215,13 +220,12 @@ class MicroSnakeGame():
         # DECORATOR!!! USE
 
     def game_loop(q):
-
         q.running = True
         while(q.running):
  #           pos = move(pos)
             q.last_sent_field = q.field.copy()
             q.handle_input()
-            q.send_udpate_chars()
+            q.send_udpate_chars(q.update_chars)
             print('last\n', q.last_sent_field)
 
 #            continue
