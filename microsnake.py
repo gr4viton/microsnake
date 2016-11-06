@@ -60,7 +60,8 @@ class MicroSnakeGame():
         
         q.dot_pos = [pos-1 for pos in q.pos_max]
         
-        q.update_chars = []
+#        q.update_chars = []
+        q.update_chars = {}
         for pos in q.snake:
             q.print_char(pos, q.head_char)
 
@@ -102,15 +103,16 @@ class MicroSnakeGame():
 
         shared_globals.field_dict = field_dict
     
-    def get_lcd_coords(q, line_num, i):
+    def get_lcd_coords(q, i, line_num):
         lcd_line_num = line_num % 2
             
         lcd_num = math.floor(line_num/2) % 4
         return lcd_num, lcd_line_num
 
-    def send_udpate_chars(q, update_chars=[]):
+    def send_udpate_chars(q):
         print(q.field)
-        print(q.last_sent_field)
+#        print(q.last_sent_field)
+        
         for line_num in range(len(q.field)):
             for i in range(len(q.field[line_num])):
 #                print(q.field)
@@ -118,12 +120,15 @@ class MicroSnakeGame():
 
                 if new_char != q.last_sent_field[line_num][i]:
 
-                    lcd_num, lcd_line_num = q.get_lcd_coords(line_num, i)
-                    char = [lcd_num, lcd_line_num, i, new_char]
-                    update_chars.append(char)
+                    lcd_num, lcd_line_num = q.get_lcd_coords(i, line_num)
+#                    char = [lcd_num, lcd_line_num, i, new_char]
+#                    update_chars.append(char)
+                    
+                    char_key = (lcd_num, lcd_line_num, i)
+                    q.update_chars[char_key] = new_char
 
-        print(update_chars)
-        shared_globals.update_chars.extend(update_chars)
+#        print(update_chars)
+        shared_globals.update_chars.update(q.update_chars)
         print(shared_globals.update_chars)
 
 
@@ -161,9 +166,15 @@ class MicroSnakeGame():
     def print_char(q, pos, new_char):
         q.field[pos[1]][pos[0]] = new_char
         
+
         lcd_num, lcd_line_num = q.get_lcd_coords(*pos)
-        char = [lcd_num, lcd_line_num, pos[1], new_char]
-        q.update_chars.append(char)
+
+#        print(pos, '=', lcd_num, lcd_line_num)
+
+        char_key = (lcd_num, lcd_line_num, pos[0])
+        q.update_chars[char_key] = new_char
+#        char = [lcd_num, lcd_line_num, pos[1], new_char]
+#        q.update_chars.append(char)
 
 
     def print_head(q):
@@ -225,8 +236,10 @@ class MicroSnakeGame():
  #           pos = move(pos)
             q.last_sent_field = q.field.copy()
             q.handle_input()
-            q.send_udpate_chars(q.update_chars)
-            print('last\n', q.last_sent_field)
+
+            #q.send_udpate_chars(q.update_chars)
+            
+#            print('last\n', q.last_sent_field)
 
 #            continue
             print('>'*42, 'Step>>', q.step )
@@ -278,6 +291,12 @@ class MicroSnakeGame():
 #            q.preprint_field(q.field)
 #            q.update_field_dict()
 
+
+            print(q.field[0])
+            print('this round', q.update_chars)
+            shared_globals.update_chars.update(q.update_chars)
+            q.update_chars = {}
+            print(shared_globals.update_chars)
 #            lcd.line('no_map',1)
             q.step += 1
 

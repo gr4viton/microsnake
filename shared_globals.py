@@ -7,4 +7,4 @@ bytefield = None
 char_range = None
 field_lines = None
 lcds = None
-update_chars = []
+update_chars = {}
