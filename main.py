@@ -164,7 +164,7 @@ class Machine():
         
 
 
-    def disp_field(q, line_num=0, lcd_line_num=0, lcd_num=0, twice=0, line_num2=0):
+    def disp_field_whole(q, line_num=0, lcd_line_num=0, lcd_num=0, twice=0, line_num2=0):
 #        field = shared_globals.field
         line_max = shared_globals.line_max
         field_dict = shared_globals.field_dict
@@ -174,6 +174,18 @@ class Machine():
             q.lcds[lcd_num].disp(line, lcd_line_num)
 #            print('lcd_num, lcd_line_num, line=', lcd_num, lcd_line_num, line)
             line_num +=1
+
+    def disp_field(q, char_num=0, lcd_line_num=0, lcd_num=0):
+        # critical section
+        update_chars = shared_globals.update_chars
+        if update_chars:
+            if len(update_chars) > 0:
+                update_char = shared_globals.update_chars.pop(0)
+            # eocs
+                lcd_num, lcd_line_num, i, new_char = update_char 
+                q.lcds[lcd_num].disp_char(new_char, lcd_line_num, i)
+        
+
 
     def init_i2c(q, bus=2, role=I2C.MASTER, baudrate=115200, self_addr=0x42):
         q.i2c = I2C(bus)

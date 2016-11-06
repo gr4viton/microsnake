@@ -9,6 +9,7 @@
 #
 # On the base of: Matt Hawkins
 # http://www.raspberrypi-spy.co.uk/
+# and 2013-2015 Danilo Bargen RPILCD
 #
 # Copyright 2015 Matt Hawkins
 #
@@ -59,10 +60,59 @@ class lcd1602():
 
     E_PULSE = int(E_PULSE)
     E_DELAY = int(E_DELAY)
-    #Open I2C interface
+    # Open I2C interface
     #bus = smbus.SMBus(0)  # Rev 1 Pi uses 0
     #bus = smbus.SMBus(1) # Rev 2 Pi uses 1
     blank_char = ' '
+
+    # # # BIT PATTERNS # # #
+
+    # Commands
+    LCD_CLEARDISPLAY = 0x01
+    LCD_RETURNHOME = 0x02
+    LCD_ENTRYMODESET = 0x04
+    LCD_DISPLAYCONTROL = 0x08
+    LCD_CURSORSHIFT = 0x10
+    LCD_FUNCTIONSET = 0x20
+    LCD_SETCGRAMADDR = 0x40
+    LCD_SETDDRAMADDR = 0x80
+
+    # Flags for display entry mode
+    LCD_ENTRYRIGHT = 0x00
+    LCD_ENTRYLEFT = 0x02
+    LCD_ENTRYSHIFTINCREMENT = 0x01
+    LCD_ENTRYSHIFTDECREMENT = 0x00
+
+    # Flags for display on/off control
+    LCD_DISPLAYON = 0x04
+    LCD_DISPLAYOFF = 0x00
+    LCD_CURSORON = 0x02
+    LCD_CURSOROFF = 0x00
+    LCD_BLINKON = 0x01
+    LCD_BLINKOFF = 0x00
+
+    # Flags for display/cursor shift
+    LCD_DISPLAYMOVE = 0x08
+    LCD_CURSORMOVE = 0x00
+
+    # Flags for display/cursor shift
+    LCD_DISPLAYMOVE = 0x08
+    LCD_CURSORMOVE = 0x00
+    LCD_MOVERIGHT = 0x04
+    LCD_MOVELEFT = 0x00
+
+    # Flags for function set
+    LCD_8BITMODE = 0x10
+    LCD_4BITMODE = 0x00
+    LCD_2LINE = 0x08
+    LCD_1LINE = 0x00
+    LCD_5x10DOTS = 0x04
+    LCD_5x8DOTS = 0x00
+
+    # Flags for RS pin modes
+    RS_INSTRUCTION = 0x00
+    RS_DATA = 0x01
+
 
     
     def __init__(self, i2c, lcd_addr,  LCD_WIDTH=16, NUM_LINES=2, backlight_status=True):
@@ -99,6 +149,9 @@ class lcd1602():
     def send_cmd(self, bits):
         self.send_byte(bits, self.LCD_CMD)
 
+    def send_char(self, bits):
+        self.send_byte(bits, self.LCD_CHR)
+
     def send_byte(self, bits, mode):
       # Send byte to data pins
       # bits = the data
@@ -124,18 +177,50 @@ class lcd1602():
       self.i2c_write_byte(self.I2C_ADDR,(bits & ~self.ENABLE))
       pyb.udelay(self.E_DELAY)
 
+
+    def print_warning(self, topic=None, **kwargs):
+        if topic == 'line_max':
+            print('Cannot disp on line indexed {}.',
+                'LCD initialized with only {} horizontal lines!'.format(
+                line_num, self.NUM_LINES))
+        elif topic == 'pos_max':
+            print('Cannot disp on pos indexed {}.',
+                'LCD initialized with only {} vertical chars!'.format(
+                pos, self.LCD_WIDTH))
+
+    def _set_cursor_pos(self, pos):
+        row_offsets = [0x00, 0x40, self.LCD_WIDTH, 0x40 + self.NUM_LINES]
+        self._cursor_pos = value
+        self.send_cmd(self.LCD_SETDDRAMADDR | row_offsets[value[0]] + value[1])
+        #usleep(50)
+
+
+    def disp_char(self, new_char, line_num, pos):
+      if line_num > self.NUM_LINES:
+          self.print_warning('line_max', line_num=line_num)
+          return
+      if pos > self.LCD_WIDTH:
+          self.print_warning('pos_max', pos=pos)
+          return
+        
+      self._set_cursor_pos([line_num, pos])
+
+      byte = ord(new_char)
+
+      self.send_char(byte)
+
+
     def disp(self, message, line_num):
       # Send string to display line
       if line_num > self.NUM_LINES:
-          print('Cannot dips on line indexed {}. LCD initialized with only {} lines!'.format(
-              line_num, self.NUM_LINES))
+          self.print_warning('line_max', line_num=line_num)
           return
       line = self.line_nums[line_num]
 
 
     #  message = message.ljust(LCD_WIDTH," ")
 
-      self.send_byte(line, self.LCD_CMD)
+      self.send_cmd(line)
       #print(message)
 
       #if LCD_WIDTH > len(message):
@@ -151,7 +236,7 @@ class lcd1602():
         else:
           byte = ord(message[i])
 
-        self.send_byte(byte, self.LCD_CHR)
+        self.send_char(byte)
 
 def main():
   # Main program block

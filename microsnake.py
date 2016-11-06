@@ -100,18 +100,33 @@ class MicroSnakeGame():
 
 
         shared_globals.field_dict = field_dict
+    
+    def get_lcd_coords(q, line_num, i):
+        lcd_line_num = line_num % 2
+            
+        lcd_num = math.floor(line_num/2) % 4
+        return lcd_num, lcd_line_num
 
     def send_udpate_chars(q):
         update_chars = []
+        print(q.field)
+        print(q.last_sent_field)
         for line_num in range(len(q.field)):
-            for i in range line_num:
+            for i in range(len(q.field[line_num])):
+#                print(q.field)
                 new_char = q.field[line_num][i]
+
                 if new_char != q.last_sent_field[line_num][i]:
-                    char = [line_num, i, new_char]
+
+                    lcd_num, lcd_line_num = q.get_lcd_coords(line_num, i)
+                    char = [lcd_num, lcd_line_num, i, new_char]
                     update_chars.append(char)
 
-        q.update_chars += update_chars
-        q.last_sent_field = q.field
+        print(update_chars)
+        shared_globals.update_chars.extend(update_chars)
+        print(shared_globals.update_chars)
+
+
 
 
     def update_field_lines(q):
@@ -204,12 +219,14 @@ class MicroSnakeGame():
         q.running = True
         while(q.running):
  #           pos = move(pos)
-
+            q.last_sent_field = q.field.copy()
             q.handle_input()
+            q.send_udpate_chars()
+            print('last\n', q.last_sent_field)
 
 #            continue
-            q.print('>'*42)
-            q.print('Step>>', q.step)
+            print('>'*42, 'Step>>', q.step )
+#            print('Step>>', q.step)
             q.print('vels[vel] = ', q.vels[q.vel])
             q.print('head,tail = ', q.head, q.tail)
             q.print(q.snake)
@@ -255,13 +272,13 @@ class MicroSnakeGame():
 #            q.field = field
 #            q.disp_field(q.field)
 #            q.preprint_field(q.field)
-            q.update_field_dict()
+#            q.update_field_dict()
 
 #            lcd.line('no_map',1)
             q.step += 1
 
             gc.collect()
-            pyb.delay(10)
+            pyb.delay(50)
 
 
 if __name__ == '__main__':
