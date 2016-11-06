@@ -46,8 +46,6 @@ class MicroSnakeGame():
         add_ways(list('ldru'))
         add_ways(range(len(q.vels)))
 
-    
-
 
         q.vel = 0
 
@@ -80,37 +78,24 @@ class MicroSnakeGame():
 
         q.dot_pos = [pos-1 for pos in q.pos_max]
         
-#        q.update_chars = []
         q.update_chars = {}
         for pos in q.snake:
             q.print_char(pos, q.head_char)
 
+        q.step = 0    
 
-        q.step = 0
-
-
+        # step delays and leveling
         q.start_delay = 400
         q.end_delay = 30
         q.num_level = 10
         q.iter_delay = math.floor((q.start_delay - q.end_delay) / q.num_level)
         q.generate_level_delays()
 
-
         q.level = 0
 
         q.set_level(q.level)
 
         shared_globals.field = q.field
-        shared_globals.line_max = q.pos_max[1]
-        q.update_field_dict()
-        
-        q.last_sent_field = q.field
-#        shared_globals.field_lines = 
-#        shared_globals.bytefield = q.byte_field
-
-        shared_globals.line_range = range(len(q.field))
-        shared_globals.microSnakeGame = q
-#        shared_globals.char_range = range(len(q.field[0]))
         
         pyb.delay(200)
 
@@ -122,8 +107,6 @@ class MicroSnakeGame():
         if level < q.num_level:
             q.level = level
             q.update_step_delay()
-        
-        
 
     def update_step_delay(q):
         q.step_delay = q.level_delays[q.level]
@@ -138,22 +121,6 @@ class MicroSnakeGame():
         q.game_loop()
 
 
-    def update_field_dict(q):
-        field_dict = {}
-
-        for line_num in range(len(q.field)):
-            line = q.field[line_num]
-            lcd_line_num = line_num % 2
-            
-            lcd_num = math.floor(line_num/2) % 4
-
-            
-            field_dict.update({line_num : [line, lcd_num, lcd_line_num]})
-#            q.lcds[lcd_num].disp(line, lcd_line_num)
-
-
-        shared_globals.field_dict = field_dict
-    
     def get_lcd_coords(q, i, line_num):
         lcd_line_num = line_num % 2
             
@@ -162,28 +129,19 @@ class MicroSnakeGame():
 
     def send_udpate_chars(q):
         print(q.field)
-#        print(q.last_sent_field)
         
         for line_num in range(len(q.field)):
             for i in range(len(q.field[line_num])):
-#                print(q.field)
                 new_char = q.field[line_num][i]
 
                 if new_char != q.last_sent_field[line_num][i]:
-
                     lcd_num, lcd_line_num = q.get_lcd_coords(i, line_num)
-#                    char = [lcd_num, lcd_line_num, i, new_char]
-#                    update_chars.append(char)
                     
                     char_key = (lcd_num, lcd_line_num, i)
                     q.update_chars[char_key] = new_char
 
-#        print(update_chars)
         shared_globals.update_chars.update(q.update_chars)
         print(shared_globals.update_chars)
-
-
-
 
     def update_field_lines(q):
         
@@ -209,10 +167,6 @@ class MicroSnakeGame():
     def go_way(q, way='r'):
             
         q.vel = q.vels[q.way_vel[way]]
-#        game.go_way('r')
-
-#        player.vel = 
-
 
     def print_char(q, pos, new_char):
         q.field[pos[1]][pos[0]] = new_char
@@ -220,19 +174,8 @@ class MicroSnakeGame():
 
         lcd_num, lcd_line_num = q.get_lcd_coords(*pos)
 
-#        print(pos, '=', lcd_num, lcd_line_num)
-#        x = pos[0]
-#        y = pos[1]
-#        char_key = (lcd_num, lcd_line_num, x, y)
-#        char_key = (x, y)
-#        char_key = tuple(pos)
-
         pos_xy = tuple(pos)
         q.update_chars[pos_xy] = new_char
-
-#        char = [lcd_num, lcd_line_num, pos[1], new_char]
-#        q.update_chars.append(char)
-
 
     def print_head(q):
         q.print_char(q.snake[q.head], q.head_char)
@@ -258,9 +201,7 @@ class MicroSnakeGame():
         return new_pos
 
     def set_random_dot(q):
-        #
         q.dot_pos = [pyb.rng() % pos_max for pos_max in q.pos_max]
-        #q.dot_pos = [random.randrange(max_pos) for max_pos in q.max_pos]
 
     def check_dot(q, pos):
         got = True
@@ -295,21 +236,12 @@ class MicroSnakeGame():
             q.last_sent_field = q.field.copy()
             q.handle_input()
 
-            #q.send_udpate_chars(q.update_chars)
-            
-#            print('last\n', q.last_sent_field)
-
-#            continue
             print('>'*42, 'Step>>', q.step )
-#            print('Step>>', q.step)
             q.print('vels[vel] = ', q.vels[q.vel])
             q.print('head,tail = ', q.head, q.tail)
             q.print(q.snake)
             
             q.print('MicroSnakeGame.turned', MicroSnakeGame.turned)
-#            if MicroSnakeGame.turned:
- #               print('turning')
-  #              q.turn()
             q.handle_input()
 
             q.print_dot()
@@ -342,18 +274,7 @@ class MicroSnakeGame():
             q.print(q.snake)
             
 
-            if q.step > q.start_length:
-#                print_tail()
-                pass
-
-#            q.field = field
-#            q.disp_field(q.field)
-#            q.preprint_field(q.field)
-#            q.update_field_dict()
             q.disp_update_chars()
-
-        
-#            lcd.line('no_map',1)
             q.step += 1
 
             gc.collect()
@@ -364,10 +285,6 @@ class MicroSnakeGame():
     def disp_update_chars(q):
         print(q.field[0])
         print('update_chars:', q.update_chars)
-#        q.update_chars.update(
-
-#        sorted_updates = sorted(update_chars.items(), 
-#                                key=operator.itemgetter(0))
 
         q.ack_field = shared_globals.ack_field 
 
@@ -377,27 +294,10 @@ class MicroSnakeGame():
 
         shared_globals.sorted_updates = sorted_updates
 
-#        while len(sorted_updates) > 0:
-#            print(sorted_updates.pop())
-
         q.ack_sent_chars()
 
-#        q.update_chars = {}
-#        q.update_chars.update(shared_globals.update_chars)
-        
-        # get rid of None value keys
-#        q.update_chars = {k:v for k,v in q.update_chars.items() if v is not None}
-
-#        q.update_chars = {}
-#        print(shared_globals.update_chars)
-
     def ack_sent_chars(q):
-#        acks = shared_globals.ack_chars
-        
- #       for ack in acks:
-  #          q.update_chars[ack] = None
         q.ack_field = shared_globals.ack_field 
-
 
         for x in range(q.num_x):
             for y in range(q.num_y):
@@ -411,20 +311,11 @@ class MicroSnakeGame():
                             del q.update_chars[pos]
                         else:
                             pass
-#                            print
                     else:
                         print('acknowledged sending of char not in update_chars!',
                                 pos, '=', ack_char)
                         pass
-
-                    
                     q.ack_field[y][x] = None
-        # same as
-#        q.update_chars.update(shared_globals.update_chars)
-        
-        # get rid of None value keys
-#        q.update_chars = {k:v for k,v in q.update_chars.items() if v is not None}
-
 
 if __name__ == '__main__':
 #    m = MicroSnakeGame()

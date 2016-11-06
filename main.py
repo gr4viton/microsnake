@@ -177,67 +177,21 @@ class Machine():
             q.btns.append(new_btn)
         
 
-
-    def disp_field_whole(q, line_num=0, lcd_line_num=0, lcd_num=0, twice=0, line_num2=0):
-#        field = shared_globals.field
-        line_max = shared_globals.line_max
-        field_dict = shared_globals.field_dict
-        while line_num < line_max:
-#            line, lcd_line_num = field_dict[line_num]
-            line, lcd_num, lcd_line_num = field_dict[line_num]
-            q.lcds[lcd_num].disp(line, lcd_line_num)
-#            print('lcd_num, lcd_line_num, line=', lcd_num, lcd_line_num, line)
-            line_num +=1
-
-
-    def disp_field(q, char_num=0, lcd_line_num=0, lcd_num=0, i=0):
+    def disp_field(q, char_num=1, lcd_line_num=0, lcd_num=0, i=0):
         # critical section
-#        update_chars = shared_globals.update_chars
-#        print('disp field!')
         sorted_updates = shared_globals.sorted_updates
-#        print('disp: sorted_updates:', sorted_updates)
         if len(sorted_updates) > 0:
-#            sorted_updates = sorted(update_chars.items(), 
-#                        key=operator.itemgetter(0))
             while i < len(sorted_updates):
-
-#                print('this to disp:', sorted_updates[i])
-#            q.update_chars[
-#            updates = list(update_chars)
-#            print(updates)
- #           if 0:
                 pos_xy, new_char = sorted_updates[i]
                 x, y = pos_xy
 
-#                print('char_coord:', char_coord)
                 if len(shared_globals.ack_field) > 0:
-#                    print(len(shared_globals.ack_field), x)
-#                    print(len(shared_globals.ack_field[x]), y)
-
-                    
-#                    print('x,y=',x,y)
-#                    print(shared_globals.ack_field[x])
-#                    print(shared_globals.ack_field[x][y-1])
-
-
                     shared_globals.ack_field[y][x] = new_char
-
-#                microSnakeGame = shared_globals.microSnakeGame
- #               if microSnakeGame is not None:
-  #                  microSnakeGame.ack_chars(char_coord)
-                    # the same as:
-    #                shared_globals.update_chars[char_coord] = None
                 # disp on lcds
                 lcd_num, lcd_line_num = shared_globals.map_field[y][x]
 
-#                q.lcds[lcd_num].set_backligth(True)
                 q.lcds[lcd_num].disp_char(new_char, lcd_line_num, x)
-#                q.lcds[lcd_num].set_backligth(False)
-#                q.lcds[lcd_num].disp_char(new_char, lcd_line_num, x)                
                 i += 1
-        
-
-
     def init_i2c(q, bus=2, role=I2C.MASTER, baudrate=115200, self_addr=0x42):
         q.i2c = I2C(bus)
 
