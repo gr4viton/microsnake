@@ -112,7 +112,7 @@ class lcd1602():
     # Flags for RS pin modes
     RS_INSTRUCTION = 0x00
     RS_DATA = 0x01
-
+    null_char = ' '
 
     
     def __init__(self, i2c, lcd_addr,  LCD_WIDTH=16, NUM_LINES=2, backlight_status=True):
@@ -122,9 +122,9 @@ class lcd1602():
         self.NUM_LINES = NUM_LINES 
         self.backlight_status = backlight_status
         self.update_backligth()
-
+        self._cursor_pos = [0,0]
 #        self.lcd_a = lcd_addr
-
+        self.row_offsets = [0x00, 0x40, self.LCD_WIDTH, 0x40 + self.NUM_LINES]
         self.send_init_sequence()
 
     def update_backligth(self):
@@ -188,10 +188,20 @@ class lcd1602():
                 'LCD initialized with only {} vertical chars!'.format(
                 pos, self.LCD_WIDTH))
 
-    def _set_cursor_pos(self, pos):
-        row_offsets = [0x00, 0x40, self.LCD_WIDTH, 0x40 + self.NUM_LINES]
-        self._cursor_pos = value
-        self.send_cmd(self.LCD_SETDDRAMADDR | row_offsets[value[0]] + value[1])
+    def _set_cursor_pos(self, pos, pos_char=None):
+        if pos_char is not None:
+            self._cursor_pos[0] = pos
+            self._cursor_pos[1] = pos_char
+        else:
+            # heap safe
+            self._cursor_pos[0] = pos[0]
+            self._cursor_pos[1] = pos[1]
+
+
+
+        self.send_cmd(self.LCD_SETDDRAMADDR | \
+                self.row_offsets[self._cursor_pos[0]] \
+                + self._cursor_pos[1])
         #usleep(50)
 
 
@@ -203,7 +213,7 @@ class lcd1602():
           self.print_warning('pos_max', pos=pos)
           return
         
-      self._set_cursor_pos([line_num, pos])
+      self._set_cursor_pos(line_num, pos)
 
       byte = ord(new_char)
 
@@ -237,6 +247,9 @@ class lcd1602():
           byte = ord(message[i])
 
         self.send_char(byte)
+    
+    def clear(self):
+        self.disp(self.null_char*16, 0)
 
 def main():
   # Main program block

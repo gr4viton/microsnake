@@ -1,3 +1,4 @@
+print('>>>>>>>>> STARTING MICROPYTHON ON STM32F4')
 import pyb
 from pyb import I2C 
 
@@ -20,6 +21,10 @@ import lcd_i2c
 import micropython
 micropython.alloc_emergency_exception_buf(100)
 
+#import operator # dict sorting
+
+
+
 try: 
     print('try importing pins')
     import pins
@@ -28,6 +33,11 @@ except ImportError:
 
 #from machine import Pins
 
+
+
+#print('>>>>>>> shape assert')
+#a = [[[1,2],[1,2]],[[1,2],[1,2]]]
+#print(shared_globals.print_shape(a))
 
 
 #x = [0,1,2,3]
@@ -81,17 +91,21 @@ class Machine():
         q.game = Game(q.disp_field)
         
 
-
+        q.lcd_refresh_freq = 10
+        q.start_level = 0
 #        q.game_logic_timer = pyb.Timer(3)
 
         tim4 = pyb.Timer(4)
-
-
         tim4.callback(lambda x: q.disp_field())
-        tim4.init(freq=5)
+        tim4.init(freq = q.lcd_refresh_freq)
         q.game_disp_timer = tim4
+        
+        q.clear_lcds()
+        q.game.run(start_level=q.start_level)
 
-        q.game.run()
+    def clear_lcds(q):
+        for lcd in q.lcds:
+            lcd.clear()
 
     def main_loop(q):
         a = 0
@@ -175,15 +189,52 @@ class Machine():
 #            print('lcd_num, lcd_line_num, line=', lcd_num, lcd_line_num, line)
             line_num +=1
 
-    def disp_field(q, char_num=0, lcd_line_num=0, lcd_num=0):
+
+    def disp_field(q, char_num=0, lcd_line_num=0, lcd_num=0, i=0):
         # critical section
-        update_chars = shared_globals.update_chars
-        if update_chars:
-            if len(update_chars) > 0:
-                update_char = shared_globals.update_chars.pop(0)
-            # eocs
-                lcd_num, lcd_line_num, i, new_char = update_char 
-                q.lcds[lcd_num].disp_char(new_char, lcd_line_num, i)
+#        update_chars = shared_globals.update_chars
+#        print('disp field!')
+        sorted_updates = shared_globals.sorted_updates
+#        print('disp: sorted_updates:', sorted_updates)
+        if len(sorted_updates) > 0:
+#            sorted_updates = sorted(update_chars.items(), 
+#                        key=operator.itemgetter(0))
+            while i < len(sorted_updates):
+
+#                print('this to disp:', sorted_updates[i])
+#            q.update_chars[
+#            updates = list(update_chars)
+#            print(updates)
+ #           if 0:
+                pos_xy, new_char = sorted_updates[i]
+                x, y = pos_xy
+
+#                print('char_coord:', char_coord)
+                if len(shared_globals.ack_field) > 0:
+#                    print(len(shared_globals.ack_field), x)
+#                    print(len(shared_globals.ack_field[x]), y)
+
+                    
+#                    print('x,y=',x,y)
+#                    print(shared_globals.ack_field[x])
+#                    print(shared_globals.ack_field[x][y-1])
+
+
+                    shared_globals.ack_field[y][x] = new_char
+
+#                microSnakeGame = shared_globals.microSnakeGame
+ #               if microSnakeGame is not None:
+  #                  microSnakeGame.ack_chars(char_coord)
+                    # the same as:
+    #                shared_globals.update_chars[char_coord] = None
+                # disp on lcds
+                lcd_num, lcd_line_num = shared_globals.map_field[y][x]
+
+#                q.lcds[lcd_num].set_backligth(True)
+                q.lcds[lcd_num].disp_char(new_char, lcd_line_num, x)
+#                q.lcds[lcd_num].set_backligth(False)
+#                q.lcds[lcd_num].disp_char(new_char, lcd_line_num, x)                
+                i += 1
         
 
 
